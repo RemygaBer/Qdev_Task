@@ -4,8 +4,7 @@ from tkinter import Tk
 import sys
 
 
-
-class Color:
+class Color:  # Defines a color object to store its parameters
     def __init__(self, name):
         self.name = name
         self.count = 0
@@ -13,7 +12,7 @@ class Color:
         self.activation_times = []
 
 
-def read_file():
+def read_file():  # GUI for getting data file location
     filename = None
     Tk().withdraw()
     try:
@@ -23,7 +22,7 @@ def read_file():
     return filename
 
 
-def ask_export():
+def ask_export():  # GUI for getting exported file location
     filename = None
     Tk().withdraw()
     answer = askquestion("Save results to file?", "Save results to a separate file?")
@@ -37,7 +36,7 @@ def ask_export():
     return filename
 
 
-def read_first_line(file_path):
+def read_first_line(file_path):  # Reading the first column and extracting color names and positions
     colours = []
     try:
         with open(file_path, 'r') as file:
@@ -53,15 +52,15 @@ def read_first_line(file_path):
         raise e
 
 
-class CalculatorTools:
+class CalculatorTools:  #  Class for storing calculation tools
 
     def __init__(self, colors):
         self.colors = colors
-        self.streak_order = [0, 1, 2, 1, 0]
+        self.streak_order = [0, 1, 2, 1, 0]  # Sequence logic
         self.streak_pos = 0
         self.streak_total = 0
 
-    def streak_manager(self, line):
+    def streak_manager(self, line):  # A given line is checked and compared to the current sequence position
         for i in range(3):
             if int(line[i]) == 1:
                 if i == self.streak_order[self.streak_pos]:
@@ -77,15 +76,7 @@ class CalculatorTools:
             self.streak_total += 1
         return
 
-    def error_check(self, line):
-        data = line[0:3]
-        data = [int(x) for x in data]
-        if sum(data) == 1:
-            return False
-        else:
-            return True
-
-    def plus_count(self, line):
+    def plus_count(self, line):  # adding count, total time and appearance time to the color objects
         for i in range(3):
             if int(line[i]) == 1:
                 self.colors[i].count += 1
@@ -94,26 +85,36 @@ class CalculatorTools:
             else:
                 continue
 
+    @staticmethod
+    def error_check(line):  # Checking for errors in line, if the sum of first 3 values is not 1 - error is counted
+        data = line[0:3]
+        data = [int(x) for x in data]
+        if sum(data) == 1:
+            return False
+        else:
+            return True
 
-def calculate(file, colors) -> tuple[list, int, int]:
+
+def calculate(file, colors) -> tuple[list, int, int]:  # main process for running calculation tools
     errors = 0
     tools = CalculatorTools(colors)
-    with open(file, "r") as text_file:
-        data = text_file.readlines()
-        data.pop(0)
+    with open(file, "r") as text_file:  # Opening data file
+        data = text_file.readlines()  # Reading all lines
+        data.pop(0)  # Removing header line
     for i in range(len(data)):
-        line = data[i].rstrip()
-        line_data = line.split(',')
+        line = data[i].rstrip()  # Removing "/n"
+        line_data = line.split(',')  # Splitting into a list
         if tools.error_check(line_data):  # skipping lines if more or less than 1 color is on
             errors += 1
             continue
-        tools.plus_count(line_data)
-        tools.streak_manager(line_data)
-    new_colors = tools.colors
-    streaks = tools.streak_total
+        tools.plus_count(line_data)  # Counting color data
+        tools.streak_manager(line_data)  # Counting streaks
+    new_colors = tools.colors  # Getting altered color objects
+    streaks = tools.streak_total  # Getting counted streaks
     return new_colors, errors, streaks
 
-def print_results(results, errors, streaks):
+
+def print_results(results, errors, streaks):  # Printing results to command window and a file if needed
     original_stdout = None
     filename = ask_export()
     if filename:
@@ -147,7 +148,6 @@ def print_results(results, errors, streaks):
         log.close()
 
 
-
 def main():
     full_cycles = 0
     data_file = read_file()
@@ -155,13 +155,12 @@ def main():
         try:
             colors = read_first_line(data_file)
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Wrong file selected.\nError: {e}")
             return
     else:
         print("No file was selected")
         return
     print_results(*calculate(data_file, colors))
-
 
 
 if __name__ == "__main__":
